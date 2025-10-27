@@ -1,0 +1,223 @@
+{\rtf1\ansi\deff0
+{\fonttbl{\f0 Arial;}}
+\fs24
+\pard\qc\b Functional Requirements Document (FRD)\par
+School Health EMR — Healthcare Management Module\b0\par
+Version: 1.0\par
+Date: \b 2025-08-08 (UTC)\b0\par
+Owner: School Health Program\par
+Prepared by: Project Team\par
+\pard\par
+\pard\sa200\b 1. Purpose and Scope\b0\par
+Deliver a user-friendly EMR module for school clinics to manage Individualized Health Care Plans (IHCP), document clinical encounters, administer medications, and monitor system-wide trends while complying with school health regulations and international standards.\par
+\par
+\b 2. In-Scope Modules\b0\par
+- Card 1: Individualized Health Care Plan (IHCP) Module\par
+- Card 2: School Health Encounter Documentation\par
+- Card 3: School Health Encounter Documentation Dashboard\par
+- Card 4: Medication Administration Dashboard\par
+\par
+\b 3. Out of Scope (for this release)\b0\par
+- Parent portal submission flows (covered in Parent Forms module)\par
+- External EHR/HIE integrations beyond secure document upload\par
+- Telehealth/virtual visit features\par
+- Inventory procurement and billing\par
+\par
+\b 4. Stakeholders and Roles\b0\par
+Role | Description | Key Permissions\par
+- School Nurse | Primary clinic operator | Create/Update encounters, create IHCP, administer meds, view dashboards\par
+- School Doctor | Clinical oversight | Approve IHCP, review encounters, advanced reporting\par
+- School Admin | Operational support | View dashboards, manage rosters, non-clinical access\par
+- Parent/Guardian | Provide health data & consent via Parent Forms | Submit/Update student medical info and consents\par
+- DHA/Authority User | Oversight & audit | System-wide reporting, policy enforcement, audits\par
+- System | Automation engine | Generate IDs, reminders, validations, alerts\par
+\par
+\b 5. Dependencies on Other Solutions\b0\par
+This module depends on the "School Health – Student Detailed Medical Information (Parent Forms)" solution for authoritative student health data and consents.\par
+\par
+\b 5.1 Data Dependencies\b0\par
+- Student master data: Full Name, Student ID, Date of Birth, Gender, Grade/Class, Homeroom\par
+- Medical profile: Diagnoses, Allergies, Chronic conditions, Disabilities, Medications, Family history, Special precautions\par
+- Parent/Guardian details: Contacts and relationships\par
+- Consents: Treatment, Medication administration, Emergency transfer, Data sharing\par
+- Attachments: Specialist reports, action plans (e.g., asthma, anaphylaxis), lab results\par
+\par
+\b 5.2 Process Dependencies\b0\par
+- Annual Health File Review Notification: Triggers for current academic year to prompt verification\par
+- Verification Workflow: Nurse/Doctor review and approval of parent-submitted updates\par
+- Update Requests: Initiated by school health team to parents for missing or outdated info\par
+- Data Cleansing: Periodic deduplication and normalization to maintain data quality\par
+\par
+\b 5.3 Technical Integration\b0\par
+- Shared Student ID and Academic Year dimensions\par
+- Read-only access to verified parent-submitted data via secured APIs or shared data tables\par
+- Event/Queue integration for status changes (e.g., verified, pending, rejected)\par
+- Audit trail interoperability (user, timestamp, before/after values)\par
+\par
+\b 5.4 Dependency Risks & Mitigations\b0\par
+Risk | Impact | Mitigation\par
+- Parent data not verified in time | Delays IHCP creation and safe medication administration | Escalation reminders; temporary nurse-entered notes flagged as unverified\par
+- Consent not recorded or expired | Cannot administer medication or perform procedures | Block actions until consent; urgent override with incident log and parent notification\par
+- Mismatch in Student IDs across systems | Data linkage errors | Master data sync jobs; reconciliation reports\par
+- Outdated attachments | Inaccurate care plans | Annual reassessment alerts; required-document checks\par
+\par
+\b 5.5 Dependency Use-Case Trace (Parent Forms → This Module)\b0\par
+- UC1 Trigger Annual Health File Review: Drives creation of IHCP reassessment tasks at academic year start; blocks activation until verification.\par
+- UC2 Submit New Student Health File: Seeds student profile and initial medical history used to prefill IHCP and encounter demographics.\par
+- UC3 Verify Submitted Health File: Verification status gates medication administration and IHCP activation.\par
+- UC4 Update Existing Student Health File: On verified updates, triggers review tasks and optional IHCP revision.\par
+- UC5 Initiate Health File Update Request: Action from clinic to parents for missing/outdated data; tracked until completion.\par
+- UC6 Verify Updated Submission: Removes temporary blocks and re-enables care actions based on new verified data.\par
+- UC7 Data Cleansing: Improves data quality; feeds reconciliation reports used by dashboards.\par
+- UC8 Manage Parent Consents: Consent validity is enforced at point-of-care (encounters, medication administration, procedures).\par
+- UC9 Manage/Assign Verification Tasks: SLA and workload metrics surface in dashboards.\par
+\par
+\b 6. Card 1 — Individualized Health Care Plan (IHCP)\b0\par
+Objective: Create and maintain structured IHCPs for students with chronic conditions, linking diagnoses to ICD-10, defining goals, interventions, medications, accommodations, emergency protocols, and review schedules.\par
+\par
+\b 6.1 Core Features\b0\par
+- Create IHCP from verified student profile with auto-populated demographics\par
+- Diagnosis mapping with ICD-10 and severity classification\par
+- Care goals, interventions, expected outcomes with review dates\par
+- Parent/Guardian consent linkage and validity checks\par
+- Medication plan with dosing, route, times, required supplies, and school storage info\par
+- Emergency action protocols (e.g., anaphylaxis, seizures) with quick-reference cards\par
+- Accommodations/restrictions (e.g., PE restrictions, dietary needs)\par
+- Automated reassessment alerts at start of academic year or upon new medical reports\par
+- Document management: Upload and version specialist letters and action plans\par
+- Audit trail for all edits and approvals\par
+\par
+\b 6.2 Data Model (Key Fields)\b0\par
+IHCP: IHCP ID (Auto), Student ID (Lookup), Academic Year, Diagnoses (ICD-10), Goals & Interventions, Medications, Emergency Protocols, Accommodations, Parent Consent (Lookup), Status, Review Date, Approver.\par
+\par
+\b 6.3 Workflow & Validations\b0\par
+1) Draft → Review → Active → Expired/Archived lifecycle\par
+2) Block activation if mandatory consents missing/expired\par
+3) Alert if medications lack instructions/storage details\par
+4) Auto-create tasks for annual reassessment and upon new parent reports\par
+5) Notify parents/homeroom when IHCP becomes Active (role-based)\par
+\par
+\b 6.4 Security & Access\b0\par
+- Only assigned nurse/doctor can edit; others read-only within same school\par
+- Parents cannot edit IHCP; may view published summary via portal if enabled\par
+- All changes audit-logged with user and timestamp\par
+\par
+\b 6.5 Reports & KPIs\b0\par
+- Active IHCPs by school/grade/condition\par
+- IHCPs due for review in next 30/60/90 days\par
+- Plans missing required consents or documents\par
+- Outcome tracking against goals\par
+\par
+\b 7. Card 2 — School Health Encounter Documentation\b0\par
+Objective: Record and monitor all clinic visits—routine complaints, injuries, emergencies, and medication administration—with standardized data capture, classifications, and outcomes.\par
+\par
+\b 7.1 Core Features\b0\par
+- Auto-capture demographics and visit details (Visit Number, Date/Time, Academic Year, Staff)\par
+- Vital signs and assessments with reference ranges by age\par
+- Structured presenting complaints via dropdowns with notes\par
+- Incident and medication error documentation\par
+- Immediate and follow-up actions logging with tasks and reminders\par
+- Visit classification (illness, injury, first aid, emergency, medication admin)\par
+- Standardized outcomes (returned to class, sent home, ER transfer, follow-up)\par
+- Attachments: photos of injuries, referral letters\par
+\par
+\b 7.2 Data Model (Key Fields)\b0\par
+Encounter: Visit Number (Auto), Student ID (Lookup), Date/Time, Staff, Chief Complaint (Picklist+Text), Vital Signs, Assessment, Actions/Procedures, Outcome, Follow-up, Incident/Medication Error.\par
+\par
+\b 7.3 Workflow & Validations\b0\par
+1) Create → Save → Complete lifecycle\par
+2) Require outcome before completion\par
+3) Block medication administration without active consent unless emergency override with incident log\par
+4) Auto-notify parent for significant events (injury, ER transfer)\par
+5) Generate follow-up tasks when indicated\par
+\par
+\b 7.4 Security & Access\b0\par
+- Editable by encounter creator and assigned clinic staff; read-only to same-school clinicians\par
+- Parents receive notifications/summary per policy but cannot view full clinical notes\par
+- Full audit history of changes\par
+\par
+\b 7.5 Reports & KPIs\b0\par
+- Visits per day/week/month by classification\par
+- Injury patterns by location/activity\par
+- Incidents/medication errors with root-cause tagging\par
+- Time-to-disposition and follow-up completion rates\par
+\par
+\b 8. Card 3 — School Health Encounter Documentation Dashboard\b0\par
+Objective: Provide real-time operational visibility into encounters, triage, and outcomes across schools, highlighting trends and overdue items.\par
+\par
+\b 8.1 Widgets & Visualizations\b0\par
+- Live encounters today by status\par
+- Visits by type (illness, injury, first aid, emergency)\par
+- Top presenting complaints\par
+- Outcomes distribution\par
+- Follow-ups due/overdue\par
+- Heatmap by grade/class\par
+- Incidents and medication errors trend\par
+\par
+\b 8.2 Filters & Drilldowns\b0\par
+- Date range, school, grade, staff, classification\par
+- Click-through to encounter records\par
+- Export to CSV/PDF\par
+\par
+\b 8.3 Security\b0\par
+- Row-level security by school\par
+- De-identified views for broader stakeholders if required\par
+\par
+\b 9. Card 4 — Medication Administration Dashboard\b0\par
+Objective: Monitor scheduled and PRN medication administrations, consents, stock status, missed doses, and errors to enhance safety and compliance.\par
+\par
+\b 9.1 Core Features\b0\par
+- Daily MAR view with due/administered/missed\par
+- Consent validation flags and expiry alerts\par
+- Integration with IHCP medication plans\par
+- Exception logging: missed doses, refusals, errors\par
+- Inventory snapshot (on-hand, expiring soon)\par
+- Notifications to parents for administered/missed critical doses per policy\par
+\par
+\b 9.2 Measures & KPIs\b0\par
+- Administration adherence rate\par
+- Missed/late doses per 1,000 administrations\par
+- Error rate and categories\par
+- Stockouts and near-expiry items\par
+\par
+\b 10. Non-Functional Requirements\b0\par
+- Availability: 99.5% during school hours\par
+- Performance: <2s for record open/save under normal load\par
+- Security: Role-based access, field-level security for sensitive data\par
+- Privacy: Compliance with applicable student data protection regulations\par
+- Auditability: Immutable audit logs for all clinical changes\par
+- Interoperability: Standards-ready (ICD-10, CSV export)\par
+- Accessibility: WCAG 2.1 AA for dashboards and forms\par
+- Localization: Multi-language labels (EN/AR) where applicable\par
+\par
+\b 11. Acceptance Criteria (High-Level)\b0\par
+1) IHCP can be created, approved, and activated only when required consents are valid.\par
+2) Encounter completion requires outcome and saves audit trail.\par
+3) Medication admin cannot be logged without consent unless emergency override with incident.\par
+4) Dashboards reflect new data within 5 minutes.\par
+5) Annual reassessment tasks auto-generate for active IHCPs at academic year start.\par
+\par
+\b 12. Requirements Traceability (BRD → FRD)\b0\par
+- Create IHCP with ICD-10 and parent consents → Section 6 (6.1–6.3)\par
+- Document and classify all clinic visits → Section 7 (7.1–7.2)\par
+- Provide encounter dashboards → Section 8 (8.1–8.2)\par
+- Monitor medication administration and errors → Section 9 (9.1–9.2)\par
+- Integrate with Parent Forms module → Section 5 (5.1–5.5)\par
+\par
+\b 13. Security, Compliance, and Audit\b0\par
+- Role-based access control with least privilege\par
+- Field-level protection for sensitive diagnoses and notes\par
+- Comprehensive audit trails (create, update, delete, view) including user and timestamp\par
+- Data retention and archival aligned with school authority policy\par
+- Incident reporting workflow for privacy and safety events\par
+\par
+\b Appendix A — Glossary\b0\par
+- IHCP: Individualized Health Care Plan\par
+- ICD-10: International Classification of Diseases, 10th Revision\par
+- MAR: Medication Administration Record\par
+\par
+\b Appendix B — Sample Field-Level Specs (Abbreviated)\b0\par
+- Encounter.Outcome (Picklist): Required on Complete\par
+- IHCP.Parent Consent (Lookup): Must be Active to activate IHCP\par
+- Medication Admin.Consent Check (Boolean/Auto): Block without consent unless emergency override\par
+}
